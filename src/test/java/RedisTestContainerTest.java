@@ -85,4 +85,16 @@ public class RedisTestContainerTest {
         assertFalse("Nothing is found, since objects were deleted",
                 foundObject.isPresent());
     }
+
+    @Test
+    public void checkSizeOfKeysInCache() {
+        cache.put("qwerty", "QWERTY");
+        assertTrue("Key Object 'qwerty' do not exist",
+                cache.get("qwerty", String.class).isPresent());
+
+        cache.put("zxc", "ZXC");
+        assertTrue("Key Object 'zxc' do not exist",
+                cache.get("qwerty", String.class).isPresent());
+        assertEquals("Size of cache is  1", Long.valueOf(1), cache.len());
+    }
 }

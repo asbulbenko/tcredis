@@ -16,7 +16,17 @@ public interface Cache {
      */
     void put(String key, Object value);
 
+    /**
+     * Delete a value object from cache.
+     * @param key   the key that was used to insert the object
+     */
     void del(String key);
+
+    /**
+     *
+     * @return      Long value for size of keys inside cache stored
+     */
+    Long len();
 
     /**
      * Retrieve a value object from the cache.

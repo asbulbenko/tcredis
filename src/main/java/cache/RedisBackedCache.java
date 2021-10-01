@@ -39,4 +39,9 @@ public class RedisBackedCache implements Cache {
     public void del(String key) {
         this.jedis.hdel(this.cacheName, key);
     }
+
+    @Override
+    public Long len() {
+        return this.jedis.hlen(this.cacheName);
+    }
 }
