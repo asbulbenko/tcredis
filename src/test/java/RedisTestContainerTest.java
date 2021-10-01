@@ -13,6 +13,8 @@ import redis.clients.jedis.Jedis;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 public class RedisTestContainerTest {
 
@@ -95,6 +97,6 @@ public class RedisTestContainerTest {
         cache.put("zxc", "ZXC");
         assertTrue("Key Object 'zxc' do not exist",
                 cache.get("qwerty", String.class).isPresent());
-        assertEquals("Size of cache is  1", Long.valueOf(1), cache.len());
+        assertThat("Cache is holding 2 keys", cache.len(), equalTo(1L));
     }
 }
