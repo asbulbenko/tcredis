@@ -12,9 +12,8 @@ import redis.clients.jedis.Jedis;
 
 import java.util.Optional;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
 public class RedisTestContainerTest {
 
@@ -22,6 +21,7 @@ public class RedisTestContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisTestContainerTest.class);
 
     private Cache cache;
+    private Jedis jedis;
 
 
     @BeforeClass
@@ -41,7 +41,7 @@ public class RedisTestContainerTest {
 
     @Before
     public void startTest() {
-        Jedis jedis = new Jedis(redis.getContainerIpAddress(), redis.getMappedPort(6379));
+        jedis = new Jedis(redis.getContainerIpAddress(), redis.getMappedPort(6379));
         cache = new RedisBackedCache(jedis, "test");
     }
 
@@ -51,52 +51,55 @@ public class RedisTestContainerTest {
 
         Optional<String> foundObject = cache.get("testcont", String.class);
 
-        assertTrue("Objects are found and exists in cache", foundObject.isPresent());
-        assertEquals("The value retrieved from cache is the same before we put it",
-                "CONT", foundObject.get());
-
+        assertThat("Objects are found and exists in cache", foundObject.isPresent(), is(Boolean.TRUE));
+        assertThat("The value retrieved from cache is the same before we put it",
+                foundObject.get(), equalTo("CONT"));
     }
 
     @Test
     public void emptyResultForNotExistingKey() {
         Optional<String> foundObject = cache.get("foo", String.class);
-        assertFalse("Nothing is found, since objects were not put in cache and do not exist",
-                foundObject.isPresent());
+        assertThat("Nothing is found, since objects were not put in cache and do not exist",
+                foundObject.isPresent(), is(Boolean.FALSE));
     }
 
     @Test
     public void insertDifferentValuesForSameKey() {
         cache.put("idea", "AA");
         Optional<String> foundObject = cache.get("idea", String.class);
-        assertEquals("Value present in cache is set to AA",
-                "AA", foundObject.get());
+        assertThat("Value present in cache is set to AA",
+                foundObject.get(), equalTo("AA"));
         cache.put("idea", "BB");
         foundObject = cache.get("idea", String.class);
-        assertEquals("Value present in cache after insert with previous key is set to BB",
-                "BB", foundObject.get());
+        assertThat("Value present in cache after insert with previous key is set to BB",
+                foundObject.get(), equalTo("BB"));
     }
 
     @Test
     public void insertAndDeleteKeyValue() {
         cache.put("foo", "BAR");
         Optional<String> foundObject = cache.get("foo", String.class);
-        assertTrue("Key Object foo do not exist", foundObject.isPresent());
+        assertThat("Key Object foo do not exist", foundObject.isPresent(), is(Boolean.TRUE));
 
         cache.del("foo");
         foundObject = cache.get("foo", String.class);
-        assertFalse("Nothing is found, since objects were deleted",
-                foundObject.isPresent());
+        assertThat("Objects are found, but should be deleted",
+                foundObject.isPresent(), is(Boolean.FALSE));
     }
 
     @Test
     public void checkSizeOfKeysInCache() {
-        cache.put("qwerty", "QWERTY");
-        assertTrue("Key Object 'qwerty' do not exist",
-                cache.get("qwerty", String.class).isPresent());
+        // create new cache name
+        cache = new RedisBackedCache(jedis, "check");
 
+        // insert first Object value
+        cache.put("qwerty", "QWERTY");
+        assertThat("Key Object 'qwerty' do not exist",
+                cache.get("qwerty", String.class).isPresent(), is(Boolean.TRUE));
+        // insert second Object value
         cache.put("zxc", "ZXC");
-        assertTrue("Key Object 'zxc' do not exist",
-                cache.get("qwerty", String.class).isPresent());
-        assertThat("Cache is holding 2 keys", cache.len(), equalTo(1L));
+        assertThat("Key Object 'zxc' do not exist",
+                cache.get("qwerty", String.class).isPresent(), is(Boolean.TRUE));
+        assertThat("Cache is holding 2 keys", cache.len(), equalTo(2L));
     }
 }
